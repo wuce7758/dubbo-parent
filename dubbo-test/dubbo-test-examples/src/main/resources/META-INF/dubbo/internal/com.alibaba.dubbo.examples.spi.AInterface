@@ -1,0 +1,2 @@
+ademo1=com.alibaba.dubbo.examples.spi.AInterfaceImpl
+ademo2=com.alibaba.dubbo.examples.spi.AInterfaceImpl2

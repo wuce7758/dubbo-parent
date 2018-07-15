@@ -1,0 +1,4 @@
+bdemo1=com.alibaba.dubbo.examples.spi.BInterfaceImpl
+bdemo2=com.alibaba.dubbo.examples.spi.BInterfaceImpl2
+bwrapper=com.alibaba.dubbo.examples.spi.BInterfaceWrapper
+bwrapper2=com.alibaba.dubbo.examples.spi.BInterfaceWrapper2
