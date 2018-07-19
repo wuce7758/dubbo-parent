@@ -135,13 +135,22 @@ public class RegistryProtocol implements Protocol {
         final Registry registry = getRegistry(originInvoker);
         // 获得服务提供者 URL
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
-
+        // dubbo://192.168.20.218:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&default.accepts=1000&default.threadpool=fixed&default.threads=100&
+        // default.timeout=5000&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&owner=uce&pid=1304&side=provider&timestamp=1531990643554
+        // 通过注册器向注册中心注册服务 ， 这里注意registryProviderUrl的并没有设置category属性， 在注册中心UrlUtils.ismatch(conuumerUrl, providerUrl)比较的时候，providerUrl的category属性取默认值providers，
+        // 这点消费者订阅的时候会指定订阅的url的category=providers，去判断有没有注册的提供者。
         registry.register(registedProviderUrl);
         // 订阅override数据
         // FIXME 提供者订阅时，会影响同一JVM即暴露服务，又引用同一服务的的场景，因为subscribed以服务名为缓存的key，导致订阅信息覆盖。
+        // 构建订阅服务overrideProviderUrl,我们是发布服务    ,    设置url的protocol 为 provider 添加category参数为configurators ckeck = false
         final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
+        // provider://192.168.20.218:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&default.accepts=1000&default.threadpool=fixed&default.threads=100&
+        // default.timeout=5000&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&owner=uce&pid=13660&side=provider&timestamp=1531988464958
+
+        // OverrideListener 实现了NotifyListener， 当注册中心的订阅的URL发生变化时 回调重新的 export
         final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
+        // 注册节点变更通知
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
         //保证每次export都返回一个新的exporter实例
         return new Exporter<T>() {

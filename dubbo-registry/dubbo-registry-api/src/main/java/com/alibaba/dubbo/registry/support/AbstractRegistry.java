@@ -70,7 +70,9 @@ public abstract class AbstractRegistry implements Registry {
     //是否是同步保存文件
     private final boolean syncSaveFile;
     private final AtomicLong lastCacheChanged = new AtomicLong();
+    // 注册中心已经注册过的URL集合
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
+    // 订阅者Entry里每个URL都对应着n个NotifyListener
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<URL, Map<String, List<URL>>>();
     private URL registryUrl;
@@ -80,6 +82,7 @@ public abstract class AbstractRegistry implements Registry {
     private AtomicBoolean destroyed = new AtomicBoolean(false);
 
     public AbstractRegistry(URL url) {
+        // 设置注册中心参数  zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&interface=com.alibaba.dubbo.registry.RegistryService&owner=uce&pid=6656&timestamp=1532004713994
         setUrl(url);
         // 启动文件保存定时器
         syncSaveFile = url.getParameter(Constants.REGISTRY_FILESAVE_SYNC_KEY, false);
@@ -122,6 +125,11 @@ public abstract class AbstractRegistry implements Registry {
         return registered;
     }
 
+    /**
+     * getSubscribed()方法获取订阅者列表
+     * 订阅者Entry里每个URL都对应着n个NotifyListener
+     * @return
+     */
     public Map<URL, Set<NotifyListener>> getSubscribed() {
         return subscribed;
     }
@@ -143,6 +151,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void doSaveProperties(long version) {
+        System.out.println("AbstractRegistry.doSaveProperties()...");
         if (version < lastCacheChanged.get()) {
             return;
         }
@@ -213,6 +222,9 @@ public abstract class AbstractRegistry implements Registry {
         }
     }
 
+    /**
+     * 加载配置文件信息
+     */
     private void loadProperties() {
         if (file != null && file.exists()) {
             InputStream in = null;
@@ -255,6 +267,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public List<URL> lookup(URL url) {
+        System.out.println("AbstractRegistry.lookup()...");
         List<URL> result = new ArrayList<URL>();
         Map<String, List<URL>> notifiedUrls = getNotified().get(url);
         if (notifiedUrls != null && notifiedUrls.size() > 0) {
@@ -286,6 +299,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void register(URL url) {
+        System.out.println("AbstractRegistry.register()...");
         if (url == null) {
             throw new IllegalArgumentException("register url == null");
         }
@@ -297,6 +311,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void unregister(URL url) {
+        System.out.println("AbstractRegistry.unregister()...");
         if (url == null) {
             throw new IllegalArgumentException("unregister url == null");
         }
@@ -305,8 +320,9 @@ public abstract class AbstractRegistry implements Registry {
         }
         registered.remove(url);
     }
-
+    // provider://192.168.20.218:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&default.accepts=1000&default.threadpool=fixed&default.threads=100&default.timeout=5000&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&owner=uce&pid=6656&side=provider&timestamp=1532004714041
     public void subscribe(URL url, NotifyListener listener) {
+        System.out.println("AbstractRegistry.subscribe()...");
         if (url == null) {
             throw new IllegalArgumentException("subscribe url == null");
         }
@@ -368,10 +384,10 @@ public abstract class AbstractRegistry implements Registry {
 
     protected void notify(List<URL> urls) {
         if (urls == null || urls.isEmpty()) return;
-
+        //getSubscribed()方法获取订阅者列表
+        //订阅者Entry里每个URL都对应着n个NotifyListener
         for (Map.Entry<URL, Set<NotifyListener>> entry : getSubscribed().entrySet()) {
             URL url = entry.getKey();
-
             if (!UrlUtils.isMatch(url, urls.get(0))) {
                 continue;
             }
@@ -380,6 +396,7 @@ public abstract class AbstractRegistry implements Registry {
             if (listeners != null) {
                 for (NotifyListener listener : listeners) {
                     try {
+                        //通知每个监听器
                         notify(url, listener, filterEmpty(url, urls));
                     } catch (Throwable t) {
                         logger.error("Failed to notify registry event, urls: " + urls + ", cause: " + t.getMessage(), t);
@@ -390,6 +407,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
+        System.out.println("AbstractRegistry.notify()...");
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }
@@ -428,16 +446,18 @@ public abstract class AbstractRegistry implements Registry {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
+            //保存到主目录下的.dubbo目录下
             saveProperties(url);
+            //上面获取到的监听器进行通知
             listener.notify(categoryList);
         }
     }
 
     private void saveProperties(URL url) {
+        System.out.println("AbstractRegistry.saveProperties()...");
         if (file == null) {
             return;
         }
-
         try {
             StringBuilder buf = new StringBuilder();
             Map<String, List<URL>> categoryNotified = notified.get(url);
@@ -464,10 +484,10 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void destroy() {
+        System.out.println("AbstractRegistry.destroy()...");
         if (!destroyed.compareAndSet(false, true)) {
             return;
         }
-
         if (logger.isInfoEnabled()) {
             logger.info("Destroy registry:" + getUrl());
         }

@@ -60,6 +60,11 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     private AtomicBoolean destroyed = new AtomicBoolean(false);
 
+    /**
+     * FailbackRegistry构建的时候通过ScheduledExecutorService来延迟执行连接注册中心，默认延迟周期为5秒。
+     * 其中retry()方法从set集合里面取出注册失败的url，然后不断去重新注册。如果注册中心当机了，但是只要注册中心重新启动之后，dubbo还是会去重新注册的。
+     * @param url
+     */
     public FailbackRegistry(URL url) {
         super(url);
         int retryPeriod = url.getParameter(Constants.REGISTRY_RETRY_PERIOD_KEY, Constants.DEFAULT_REGISTRY_RETRY_PERIOD);
@@ -100,6 +105,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     private void addFailedSubscribed(URL url, NotifyListener listener) {
+        logger.info("........... FailbackRegistry.java call addFailedSubscribed() ...........");
         Set<NotifyListener> listeners = failedSubscribed.get(url);
         if (listeners == null) {
             failedSubscribed.putIfAbsent(url, new ConcurrentHashSet<NotifyListener>());
@@ -109,6 +115,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     private void removeFailedSubscribed(URL url, NotifyListener listener) {
+        logger.info("........... FailbackRegistry.java call removeFailedSubscribed() ...........");
         Set<NotifyListener> listeners = failedSubscribed.get(url);
         if (listeners != null) {
             listeners.remove(listener);
@@ -124,7 +131,8 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     @Override
-    public void register(URL url) {
+    public void register(URL url) { // dubbo://192.168.20.218:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&default.accepts=1000&default.threadpool=fixed&default.threads=100&default.timeout=5000&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&owner=uce&pid=6656&side=provider&timestamp=1532004714041
+        logger.info("........... FailbackRegistry.java call register() ...........");
         if (destroyed.get()){
             return;
         }
@@ -136,7 +144,6 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             doRegister(url);
         } catch (Exception e) {
             Throwable t = e;
-
             // 如果开启了启动时检测，则直接抛出异常
             boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
                     && url.getParameter(Constants.CHECK_KEY, true)
@@ -158,6 +165,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void unregister(URL url) {
+        logger.info("........... FailbackRegistry.java call unregister() ...........");
         if (destroyed.get()){
             return;
         }
@@ -189,8 +197,14 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    /**
+     * 服务消费者在初始化ConsumerConfig时会调用RegistryProtocol的refer方法进一步调用RegistryDirectory的subscribe方法最终调用ZookeeperRegistry的subscribe方法向注册中心订阅服务。
+     * @param url
+     * @param listener
+     */
     @Override
     public void subscribe(URL url, NotifyListener listener) {
+        logger.info("........... FailbackRegistry.java call subscribe() ...........");
         if (destroyed.get()){
             return;
         }
@@ -229,6 +243,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
+        logger.info("........... FailbackRegistry.java call unsubscribe() ...........");
         if (destroyed.get()){
             return;
         }
@@ -265,6 +280,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
+        logger.info("........... FailbackRegistry.java call notify() ...........");
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }
@@ -291,6 +307,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     protected void recover() throws Exception {
+        logger.info("........... FailbackRegistry.java call recover() ...........");
         // register
         Set<URL> recoverRegistered = new HashSet<URL>(getRegistered());
         if (!recoverRegistered.isEmpty()) {
@@ -318,7 +335,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     // 重试失败的动作
     protected void retry() {
-        // logger.info("........... FailbackRegistry.java call retry() ...........");
+        logger.info("........... FailbackRegistry.java call retry() ...........");
         if (!failedRegistered.isEmpty()) {
             Set<URL> failed = new HashSet<URL>(failedRegistered);
             if (failed.size() > 0) {
@@ -472,6 +489,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
 
     // ==== 模板方法 ====
+    // 通过模板设计模式扩展，重写了AbstractRegistry类一些实现，并新增模板方法，交个子类去实现。
 
     protected abstract void doRegister(URL url);
 

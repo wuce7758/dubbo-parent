@@ -58,15 +58,21 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
+        // 如果provider的 URL是0.0.0.0 或者在参数中带anyHost=true则抛出异常，注册地址不存在
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
+        // 服务分组(默认是"dubbo")
         String group = url.getParameter(Constants.GROUP_KEY, DEFAULT_ROOT);
+        // 在group头补齐“/”
         if (!group.startsWith(Constants.PATH_SEPARATOR)) {
             group = Constants.PATH_SEPARATOR + group;
         }
+        //服务分组根地址
         this.root = group;
+        //创建Zookeeper客户端
         zkClient = zookeeperTransporter.connect(url);
+        //添加状态监听器
         zkClient.addStateListener(new StateListener() {
             public void stateChanged(int state) {
                 if (state == RECONNECTED) {
@@ -105,8 +111,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    /**
+     * Provider初始化时会调用doRegister方法向注册中心发起注册。
+     * @param url
+     */
     protected void doRegister(URL url) {
         try {
+            //连接注册中心注册
             zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -121,17 +132,28 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    /**
+     *
+     * @param url
+     * @param listener
+     */
     protected void doSubscribe(final URL url, final NotifyListener listener) {
+        logger.info("_______________ ZookeeperRegistry.java call doSubscribe() _______________");
         try {
+            //如果provider的service的接口配置的是“*”
             if (Constants.ANY_VALUE.equals(url.getServiceInterface())) {
+                //获取服务分组根路径
                 String root = toRootPath();
+                //获取服务的NotifyListener
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                 if (listeners == null) {
+                    //如果没有则创建一个
                     zkListeners.putIfAbsent(url, new ConcurrentHashMap<NotifyListener, ChildListener>());
                     listeners = zkListeners.get(url);
                 }
                 ChildListener zkListener = listeners.get(listener);
                 if (zkListener == null) {
+                    //如果没有子监听器则创建一个
                     listeners.putIfAbsent(listener, new ChildListener() {
                         public void childChanged(String parentPath, List<String> currentChilds) {
                             for (String child : currentChilds) {
@@ -146,24 +168,33 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     });
                     zkListener = listeners.get(listener);
                 }
+                //向服务器订阅服务，注册中心会调用NotifyListener的notify函数返回服务列表
                 zkClient.create(root, false);
+                //获取服务地址列表
                 List<String> services = zkClient.addChildListener(root, zkListener);
+
                 if (services != null && services.size() > 0) {
+                    //如果存在服务
                     for (String service : services) {
                         service = URL.decode(service);
                         anyServices.add(service);
+                        //如果serviceInterface是“*”则从分组根路径遍历service并订阅所有服务
                         subscribe(url.setPath(service).addParameters(Constants.INTERFACE_KEY, service,
                                 Constants.CHECK_KEY, String.valueOf(false)), listener);
                     }
                 }
             } else {
-                List<URL> urls = new ArrayList<URL>();
+                //如果serviceInterface不是“*”则创建Zookeeper客户端索取服务列表，并通知（notify）消费者（consumer）这些服务可以用了
+                List<URL> urls = new ArrayList<URL>();  // 关联通知Listener与zk节点变更Listener映射
+                //获取类似于http：//xxx.xxx.xxx.xxx/context/com.service.xxxService/consumer的地址
                 for (String path : toCategoriesPath(url)) {
+                    //获取例如com.service.xxxService对应的NotifyListener map
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                     if (listeners == null) {
                         zkListeners.putIfAbsent(url, new ConcurrentHashMap<NotifyListener, ChildListener>());
                         listeners = zkListeners.get(url);
                     }
+                    //获取ChildListener
                     ChildListener zkListener = listeners.get(listener);
                     if (zkListener == null) {
                         listeners.putIfAbsent(listener, new ChildListener() {
@@ -179,6 +210,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
                     }
                 }
+                // 提醒消费者
+                // 首次订阅发出一次通知，让消费者完成初始化
                 notify(url, listener, urls);
             }
         } catch (Throwable e) {
@@ -187,6 +220,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     protected void doUnsubscribe(URL url, NotifyListener listener) {
+        System.out.println("doUnsubscribe");
         ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
         if (listeners != null) {
             ChildListener zkListener = listeners.get(listener);
@@ -197,6 +231,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     public List<URL> lookup(URL url) {
+        logger.info("_______________ ZookeeperRegistry.java call lookup() _______________");
         if (url == null) {
             throw new IllegalArgumentException("lookup url == null");
         }
