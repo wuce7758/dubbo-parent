@@ -19,8 +19,17 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
 
     private final URL url;
 
+    /**
+     * 状态监听器
+     */
     private final Set<StateListener> stateListeners = new CopyOnWriteArraySet<StateListener>();
 
+    /**
+     * child监听器
+     *
+     * TargetChildListener 监听器的不同客户端实现
+     *
+     */
     private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners = new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
 
     private volatile boolean closed = false;
@@ -29,10 +38,12 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         this.url = url;
     }
 
+    @Override
     public URL getUrl() {
         return url;
     }
 
+    @Override
     public void create(String path, boolean ephemeral) {
         int i = path.lastIndexOf('/');
         if (i > 0) {
@@ -45,10 +56,12 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         }
     }
 
+    @Override
     public void addStateListener(StateListener listener) {
         stateListeners.add(listener);
     }
 
+    @Override
     public void removeStateListener(StateListener listener) {
         stateListeners.remove(listener);
     }
@@ -57,6 +70,7 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         return stateListeners;
     }
 
+    @Override
     public List<String> addChildListener(String path, final ChildListener listener) {
         ConcurrentMap<ChildListener, TargetChildListener> listeners = childListeners.get(path);
         if (listeners == null) {
@@ -71,6 +85,7 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         return addTargetChildListener(path, targetListener);
     }
 
+    @Override
     public void removeChildListener(String path, ChildListener listener) {
         ConcurrentMap<ChildListener, TargetChildListener> listeners = childListeners.get(path);
         if (listeners != null) {
@@ -87,6 +102,7 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         }
     }
 
+    @Override
     public void close() {
         if (closed) {
             return;

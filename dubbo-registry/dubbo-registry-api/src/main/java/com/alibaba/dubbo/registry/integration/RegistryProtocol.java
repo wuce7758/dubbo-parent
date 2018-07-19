@@ -131,7 +131,7 @@ public class RegistryProtocol implements Protocol {
         //export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
 
-        //registry provider
+        //registry provider 添加定时任务  ping request response
         final Registry registry = getRegistry(originInvoker);
         // 获得服务提供者 URL
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);

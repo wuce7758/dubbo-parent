@@ -220,7 +220,7 @@ public class DubboProtocol extends AbstractProtocol {
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl();
 
-        // export service.
+        // export service.  com.alibaba.dubbo.demo.DemoService:20880
         String key = serviceKey(url);
         // 创建 DubboExporter 对象，并添加到 `exporterMap` 。
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);

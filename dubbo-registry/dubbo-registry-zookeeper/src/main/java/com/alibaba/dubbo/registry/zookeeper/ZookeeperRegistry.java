@@ -228,9 +228,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
     private String toServicePath(URL url) {
         String name = url.getServiceInterface();
         if (Constants.ANY_VALUE.equals(name)) {
-            return toRootPath();
+            String servicePath =  toRootPath();
+            return servicePath;
         }
-        return toRootDir() + URL.encode(name);
+        String servicePath = toRootDir() + URL.encode(name);
+        return servicePath;
     }
 
     private String[] toCategoriesPath(URL url) {
@@ -253,7 +255,9 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     private String toUrlPath(URL url) {
-        return toCategoryPath(url) + Constants.PATH_SEPARATOR + URL.encode(url.toFullString());
+        String urlPath =  toCategoryPath(url) + Constants.PATH_SEPARATOR + URL.encode(url.toFullString());
+        ///dubbo/com.alibaba.dubbo.demo.DemoService/providers/dubbo%3A%2F%2F192.168.20.218%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26default.accepts%3D1000%26default.threadpool%3Dfixed%26default.threads%3D100%26default.timeout%3D5000%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26owner%3Duce%26pid%3D11956%26side%3Dprovider%26timestamp%3D1531905119299
+        return urlPath;
     }
 
     private List<URL> toUrlsWithoutEmpty(URL consumer, List<String> providers) {

@@ -64,7 +64,7 @@ public class ZookeeperRegistryTest {
     }
 
     /**
-     * Test method for {@link com.alibaba.dubbo.registry.support.injvm.InjvmRegistry#register(java.util.Map)}.
+     * Test method for { com.alibaba.dubbo.registry.support.injvm.InjvmRegistry#register(java.util.Map)}.
      */
     @Test
     public void testRegister() {
@@ -84,7 +84,7 @@ public class ZookeeperRegistryTest {
 
     /**
      * Test method for
-     * {@link com.alibaba.dubbo.registry.support.injvm.InjvmRegistry#subscribe(java.util.Map, com.alibaba.dubbo.registry.support.NotifyListener)}
+     * { com.alibaba.dubbo.registry.support.injvm.InjvmRegistry#subscribe(java.util.Map, com.alibaba.dubbo.registry.support.NotifyListener)}
      * .
      */
     @Test

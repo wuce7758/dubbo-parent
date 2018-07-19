@@ -194,6 +194,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         if (destroyed.get()){
             return;
         }
+        // 为 subscribed 属性添加已经发布服务的信息  key 为url ,value 为 originalInvoker + 的 OverrideListener 对象
         super.subscribe(url, listener);
         removeFailedSubscribed(url, listener);
         try {
@@ -317,6 +318,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     // 重试失败的动作
     protected void retry() {
+        // logger.info("........... FailbackRegistry.java call retry() ...........");
         if (!failedRegistered.isEmpty()) {
             Set<URL> failed = new HashSet<URL>(failedRegistered);
             if (failed.size() > 0) {
