@@ -151,7 +151,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void doSaveProperties(long version) {
-        System.out.println("AbstractRegistry.doSaveProperties()...");
+
         if (version < lastCacheChanged.get()) {
             return;
         }
@@ -267,7 +267,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public List<URL> lookup(URL url) {
-        System.out.println("AbstractRegistry.lookup()...");
+
         List<URL> result = new ArrayList<URL>();
         Map<String, List<URL>> notifiedUrls = getNotified().get(url);
         if (notifiedUrls != null && notifiedUrls.size() > 0) {
@@ -299,7 +299,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void register(URL url) {
-        System.out.println("AbstractRegistry.register()...");
+
         if (url == null) {
             throw new IllegalArgumentException("register url == null");
         }
@@ -311,7 +311,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void unregister(URL url) {
-        System.out.println("AbstractRegistry.unregister()...");
+
         if (url == null) {
             throw new IllegalArgumentException("unregister url == null");
         }
@@ -322,7 +322,7 @@ public abstract class AbstractRegistry implements Registry {
     }
     // provider://192.168.20.218:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&default.accepts=1000&default.threadpool=fixed&default.threads=100&default.timeout=5000&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&owner=uce&pid=6656&side=provider&timestamp=1532004714041
     public void subscribe(URL url, NotifyListener listener) {
-        System.out.println("AbstractRegistry.subscribe()...");
+
         if (url == null) {
             throw new IllegalArgumentException("subscribe url == null");
         }
@@ -407,7 +407,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
-        System.out.println("AbstractRegistry.notify()...");
+
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }
@@ -454,7 +454,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     private void saveProperties(URL url) {
-        System.out.println("AbstractRegistry.saveProperties()...");
+
         if (file == null) {
             return;
         }
@@ -484,7 +484,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void destroy() {
-        System.out.println("AbstractRegistry.destroy()...");
+
         if (!destroyed.compareAndSet(false, true)) {
             return;
         }

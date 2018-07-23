@@ -219,11 +219,12 @@ public class DubboProtocol extends AbstractProtocol {
 
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl();
-
-        // export service.  com.alibaba.dubbo.demo.DemoService:20880
+        // export service.组装key   com.alibaba.dubbo.demo.DemoService:20880
         String key = serviceKey(url);
         // 创建 DubboExporter 对象，并添加到 `exporterMap` 。
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
+
+        // 需要暴露的服务集合 key : com.alibaba.dubbo.demo.DemoService:20880 value : exporter
         exporterMap.put(key, exporter);
 
         //export an stub service for dispaching event
@@ -275,7 +276,7 @@ public class DubboProtocol extends AbstractProtocol {
         url = url.addParameter(Constants.CODEC_KEY, Version.isCompatibleVersion() ? COMPATIBLE_CODEC_NAME : DubboCodec.NAME);
         ExchangeServer server;
         try {
-            server = Exchangers.bind(url, requestHandler);
+            server = Exchangers.bind(url, requestHandler); // exchanger是一个信息交换曾
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
         }

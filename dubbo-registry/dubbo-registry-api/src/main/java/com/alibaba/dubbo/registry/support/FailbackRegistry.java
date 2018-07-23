@@ -105,7 +105,6 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     private void addFailedSubscribed(URL url, NotifyListener listener) {
-        logger.info("........... FailbackRegistry.java call addFailedSubscribed() ...........");
         Set<NotifyListener> listeners = failedSubscribed.get(url);
         if (listeners == null) {
             failedSubscribed.putIfAbsent(url, new ConcurrentHashSet<NotifyListener>());
@@ -115,7 +114,6 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     private void removeFailedSubscribed(URL url, NotifyListener listener) {
-        logger.info("........... FailbackRegistry.java call removeFailedSubscribed() ...........");
         Set<NotifyListener> listeners = failedSubscribed.get(url);
         if (listeners != null) {
             listeners.remove(listener);
@@ -132,10 +130,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void register(URL url) { // dubbo://192.168.20.218:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&default.accepts=1000&default.threadpool=fixed&default.threads=100&default.timeout=5000&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&owner=uce&pid=6656&side=provider&timestamp=1532004714041
-        logger.info("........... FailbackRegistry.java call register() ...........");
         if (destroyed.get()){
             return;
         }
+        // registered 中缓存需要注册的服务
         super.register(url);
         failedRegistered.remove(url);
         failedUnregistered.remove(url);
@@ -165,7 +163,6 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void unregister(URL url) {
-        logger.info("........... FailbackRegistry.java call unregister() ...........");
         if (destroyed.get()){
             return;
         }
@@ -204,7 +201,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
      */
     @Override
     public void subscribe(URL url, NotifyListener listener) {
-        logger.info("........... FailbackRegistry.java call subscribe() ...........");
+
         if (destroyed.get()){
             return;
         }
@@ -243,7 +240,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
-        logger.info("........... FailbackRegistry.java call unsubscribe() ...........");
+
         if (destroyed.get()){
             return;
         }
@@ -280,7 +277,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
-        logger.info("........... FailbackRegistry.java call notify() ...........");
+
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }
@@ -305,9 +302,13 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         super.notify(url, listener, urls);
     }
 
+    /**
+     * 该方法的作用是 将注册缓存中的URL集合信息加入到recoverRegistered 失败的注册缓存中， 订阅集合中的URL信息放入失败的订阅缓存中
+     * 错误集合中的数据是 FailbackRegistry声明中定时任务的数据源
+     * @throws Exception
+     */
     @Override
     protected void recover() throws Exception {
-        logger.info("........... FailbackRegistry.java call recover() ...........");
         // register
         Set<URL> recoverRegistered = new HashSet<URL>(getRegistered());
         if (!recoverRegistered.isEmpty()) {
@@ -335,7 +336,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     // 重试失败的动作
     protected void retry() {
-        logger.info("........... FailbackRegistry.java call retry() ...........");
+
         if (!failedRegistered.isEmpty()) {
             Set<URL> failed = new HashSet<URL>(failedRegistered);
             if (failed.size() > 0) {

@@ -127,11 +127,9 @@ public class RegistryProtocol implements Protocol {
     }
 
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        // 暴露服务
-        //export invoker
+        // 暴露服务 export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
-
-        //registry provider 添加定时任务  ping request response
+        //registry provider 添加定时任务
         final Registry registry = getRegistry(originInvoker);
         // 获得服务提供者 URL
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
@@ -288,7 +286,7 @@ public class RegistryProtocol implements Protocol {
 
     /**
      * 获取invoker在bounds中缓存的key
-     *
+     * 读取 invoker 中的 dubbo://192.168.20.51:20880/
      * @param originInvoker
      * @return
      */
